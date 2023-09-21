@@ -11,9 +11,6 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", help="dataset", default='mnist', type=str)
     parser.add_argument("--bias", help="degree of non-IID to assign data to workers", type=float, default=0.5)
-    parser.add_argument("--net", help="net", default='dnn', type=str, choices=['mlr', 'dnn', 'resnet18'])
-    parser.add_argument("--batch_size", help="batch size", default=32, type=int)
-    parser.add_argument("--lr", help="learning rate", default=0.01, type=float)
     parser.add_argument("--num_workers", help="# workers", default=10, type=int)
     parser.add_argument("--cmax", help="# suspected workers", default=0, type=int)
     parser.add_argument("--num_rounds", help="# rounds", default=50, type=int)
@@ -50,6 +47,7 @@ def load_data(dataset_name):
         del trainset, testset        
         num_inputs = 28 * 28
         num_outputs = 10
+        lr = 0.01
         net = nets.DNN()
 
     elif dataset_name == 'cifar10':
@@ -71,12 +69,13 @@ def load_data(dataset_name):
         del trainset, testset
         num_inputs = 32*32*3
         num_outputs = 10
+        lr = 0.1
         net = nets.ResNet18()
         
     else:
         sys.exit('Not Implemented Dataset!')
 
-    return train_data, test_data, net, num_inputs, num_outputs, batch_size
+    return train_data, test_data, net, num_inputs, num_outputs, lr, batch_size
 
 def distribute_data(train_data, bias_weight, num_workers, num_outputs, device):
 

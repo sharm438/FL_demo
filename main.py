@@ -20,10 +20,9 @@ def main(args):
     if args.gpu == -1: device = torch.device('cpu')
     else: device = torch.device('cuda')
 
-    lr = args.lr
     filename = args.exp
 
-    train_data, test_data, net, num_inputs, num_outputs, batch_size = utils.load_data(args.dataset)
+    train_data, test_data, net, num_inputs, num_outputs, lr_init, batch_size = utils.load_data(args.dataset)
     net.to(device) 
     distributed_data, distributed_labels, wts = utils.distribute_data(train_data, args.bias, num_workers, num_outputs, device) 
     criterion = nn.CrossEntropyLoss()
@@ -36,7 +35,8 @@ def main(args):
     for rnd in range(num_rounds):
         grad_list = []
         if (args.dataset == 'cifar10'):
-            lr = utils.get_lr(rnd, num_rounds, args.lr)
+            lr = utils.get_lr(rnd, num_rounds, lr_init)
+        else: lr = lr_init
         for worker in range(num_workers):
             net_local = deepcopy(net) 
             net_local.train()
@@ -87,8 +87,6 @@ def main(args):
         with torch.no_grad():
             for data in test_data:
                 images, labels = data
-                if (args.net == 'mlr'):
-                    images = images.reshape((-1, num_inputs))
                 outputs = net(images.to(device))
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
